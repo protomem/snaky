@@ -34,18 +34,43 @@ int32_t main()
 
         bool game_over = false;
         int32_t xdir = 1, ydir = 0;
+        int32_t applex = -1, appley = 0;
 
         while (!quit && !game_over) {
+            if (applex < 0) {
+                applex = rand() % COLS;
+                appley = rand() % ROWS;
+
+                for (int32_t i = tail; i != head; i = (i + 1) % 1000)
+                    if (x[i] == applex && y[i] == appley)
+                        applex = -1;
+
+                if (applex >= 0) {
+                    // Draw apple
+                    printf("\e[%iB\e[%iC❤", appley + 1, applex + 1);
+                    printf("\e[%iF", appley + 1);
+                }
+            }
+
             // Clear snake tail
             printf("\e[%iB\e[%iC·", y[tail] + 1, x[tail] + 1);
             printf("\e[%iF", y[tail] + 1);
 
+            if (x[head] == applex && y[tail] == appley) {
+                applex = -1;
+                printf("\a");
+            } else {
+                tail = (tail + 1) % 1000;
+            }
+
             int32_t new_head = (head + 1) % 1000;
             x[new_head] = (x[head] + xdir + COLS) % COLS;
             y[new_head] = (y[head] + ydir + ROWS) % ROWS;
-
-            tail = (tail + 1) % 1000;
             head = new_head;
+
+            for (int32_t i = tail; i != head; i = (i + 1) % 1000)
+                if (x[i] == x[head] && y[i] == y[head])
+                    game_over = true;
 
             // Draw head
             printf("\e[%iB\e[%iC▓", y[head] + 1, x[head] + 1);
@@ -83,6 +108,14 @@ int32_t main()
                     ydir = -1;
                 }
             }
+        }
+
+        if (!quit) {
+            // Show game over
+            printf("\e[%iB\e[%iC Game Over!", ROWS / 2, COLS / 2 - 5);
+            printf("\e[%iF", ROWS / 2);
+            fflush(stdout);
+            getchar();
         }
     }
 
